@@ -3,6 +3,7 @@ package com.fazal.mergevideosdemo.ui
 import android.media.MediaPlayer.OnPreparedListener
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
@@ -43,6 +44,8 @@ class MainActivity : BaseActivity() {
     }
 
     private fun playVideo() {
+
+        videoView.visibility = View.VISIBLE
         val video: Uri =
             Uri.parse("$cacheDir/outputs.mp4")
         videoView.setVideoURI(video)
@@ -54,6 +57,8 @@ class MainActivity : BaseActivity() {
     }
 
     private fun mergeVideos() {
+        viewModel.writeVideo(R.raw.video1, "video1.mp4")
+        viewModel.writeVideo(R.raw.video2, "video2.mp4")
         val videoURL1 = "$cacheDir/video1.mp4"
         val videoURL2 = "$cacheDir/video2.mp4"
         val outputFile = File("${cacheDir}/outputs.mp4")

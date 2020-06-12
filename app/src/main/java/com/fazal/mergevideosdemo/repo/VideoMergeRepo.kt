@@ -9,15 +9,32 @@ import java.io.InputStream
 import java.util.concurrent.locks.ReentrantLock
 import javax.inject.Inject
 
-class VideoRepo @Inject constructor(val application: Application) {
+/**
+ * Video Merge Repository
+ *
+ * @param application The application instance that we are providing
+ * at the time of creation of an app component
+ */
+class VideoMergeRepo @Inject constructor(val application: Application) {
 
+    /**
+     * Fetch the instance of [FFmpeg]
+     *
+     * @return The [FFmpeg] instance
+     */
     fun getFFMPEGInstance(): FFmpeg? {
         return FFmpeg.getInstance(application)
     }
 
+    /**
+     * Fetch FFMPEG Video Merging Command
+     *
+     * @param video1Path the path of video1
+     * @param video2Path the path of video2
+     *
+     * @return the [FFmpeg] Video Merge command array
+     */
     fun getFFMPEGCommand(video1Path: String, video2Path: String): Array<String> {
-        writeVideo(R.raw.video1, "video1.mp4")
-        writeVideo(R.raw.video2, "video2.mp4")
         return arrayOf(
 
             "-i", video1Path, "-i", video2Path,
@@ -39,8 +56,16 @@ class VideoRepo @Inject constructor(val application: Application) {
         )
     }
 
+    /**
+     * Write Video in cache directory
+     *
+     * @param id The raw id of video
+     * @param name The file name
+     */
     fun writeVideo(id: Int, name: String) {
         val fileName = "${application.cacheDir}/${name}"
+        val file = File(fileName)
+        if (file.exists()) return
         val `in`: InputStream = application.resources.openRawResource(id)
         val out = FileOutputStream(fileName)
         val buff = ByteArray(1024)

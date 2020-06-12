@@ -4,28 +4,38 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.fazal.mergevideosdemo.R
-import com.fazal.mergevideosdemo.repo.VideoRepo
+import com.fazal.mergevideosdemo.repo.VideoMergeRepo
 import nl.bravobit.ffmpeg.ExecuteBinaryResponseHandler
 import nl.bravobit.ffmpeg.exceptions.FFmpegCommandAlreadyRunningException
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
 import javax.inject.Inject
 
-
-class VideoViewModel @Inject constructor(val application: Application, val videoRepo: VideoRepo) : ViewModel() {
+/**
+ * Video View Model Class which is lifecycle aware
+ *
+ * @param application The application instance privided by dagger
+ * @param videoMergeRepo The [VideoMergeRepo] instance provide by dagger
+ */
+class VideoViewModel
+@Inject constructor(val application: Application,
+                    val videoMergeRepo: VideoMergeRepo) : ViewModel() {
 
     private val _merged_video = MutableLiveData<Boolean>()
 
     val isVideoMerged: LiveData<Boolean>
         get() = _merged_video
 
+    /**
+     * Merge the video file
+     *
+     * @param video1Path The path of first video that is going to merge
+     * @param video2Path The path of second video that is going to merge
+     *
+     */
     fun mergeVideoFiles(video1Path: String, video2Path: String) {
-        val ffmpeg = videoRepo.getFFMPEGInstance()
+        val ffmpeg = videoMergeRepo.getFFMPEGInstance()
         if (ffmpeg?.isSupported!!) {
             try {
-                val cmd = videoRepo.getFFMPEGCommand(video1Path, video2Path)
+                val cmd = videoMergeRepo.getFFMPEGCommand(video1Path, video2Path)
                 // to execute "ffmpeg -version" command you just need to pass "-version"
                 ffmpeg.execute(cmd, object : ExecuteBinaryResponseHandler() {
                     override fun onStart() {
@@ -35,11 +45,11 @@ class VideoViewModel @Inject constructor(val application: Application, val video
 
                     }
                     override fun onFailure(message: String) {
-                        setFmpegSupportValue(false)
+                        setMergedVideoValue(false)
                         println("VideoViewModel: merge failed")
                     }
                     override fun onSuccess(message: String) {
-                        setFmpegSupportValue(true)
+                        setMergedVideoValue(true)
                         println("VideoViewModel: merge success")
                     }
                     override fun onFinish() {
@@ -54,11 +64,32 @@ class VideoViewModel @Inject constructor(val application: Application, val video
         }
     }
 
+    /**
+     * Write Video
+     *
+     * @param rawVideoID The video id that is in the raw folder
+     * @param filename The filename of the video
+     */
     fun writeVideo(rawVideoID: Int, filename: String) {
-        videoRepo.writeVideo(rawVideoID, filename)
+        videoMergeRepo.writeVideo(rawVideoID, filename)
     }
 
-    private fun setFmpegSupportValue(isSupport: Boolean) {
+    /**
+     * Set the Merged Video [MutableLiveData] value
+     *
+     * There is one problem with Live Data and it is the known issue
+     *
+     * Problem:
+     *
+     * LiveData publishes the data to the destination component if it is in the foreground.
+     * If it’s not, it might hold the data and deliver it when that specific component comes back
+     * to the foreground, like in onResume state.
+     *
+     * If your live data subscribe in multiple fragment you will face issues to avoid this
+     * check the new value and previus value is same return from the function
+     *
+     */
+    private fun setMergedVideoValue(isSupport: Boolean) {
         if (_merged_video.value == isSupport) {
             return
         }
