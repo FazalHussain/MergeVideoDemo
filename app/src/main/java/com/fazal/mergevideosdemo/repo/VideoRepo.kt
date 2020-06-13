@@ -15,7 +15,7 @@ import javax.inject.Inject
  * @param application The application instance that we are providing
  * at the time of creation of an app component
  */
-class VideoMergeRepo @Inject constructor(val application: Application) {
+class VideoRepo @Inject constructor(val application: Application) {
 
     /**
      * Fetch the instance of [FFmpeg]
@@ -34,7 +34,7 @@ class VideoMergeRepo @Inject constructor(val application: Application) {
      *
      * @return the [FFmpeg] Video Merge command array
      */
-    fun getFFMPEGCommand(video1Path: String, video2Path: String): Array<String> {
+    fun getFFMPEGMergeCommand(video1Path: String, video2Path: String): Array<String> {
         return arrayOf(
 
             "-i", video1Path, "-i", video2Path,
@@ -53,6 +53,33 @@ class VideoMergeRepo @Inject constructor(val application: Application) {
                     "[int][1:v]overlay=W/2:0[vid]",
             "-map", "[vid]",
             "-c:v", "libx264", "-crf", "23", "/data/user/0/com.fazal.mergevideosdemo/cache/output.mp4"*/
+        )
+    }
+
+    /**
+     * Fetch FFMPEG Video Blurred Filter Command
+     *
+     * @param videoPath the path of video
+     *
+     * @return the [FFmpeg] Video blurred filter command array
+     */
+    fun getBlurFilterCommand(videoPath: String): Array<String> {
+        return arrayOf(
+            "-i", videoPath, "-vf", "boxblur=2:1", "${application.cacheDir}/outputs_blur.mp4"
+        )
+    }
+
+    /**
+     * Fetch FFMPEG Video Color Correction Command
+     *
+     * @param videoPath the path of video
+     *
+     * @return the [FFmpeg] Video color correction filter command array
+     */
+    fun getColorCorrectionFilterCommand(videoPath: String): Array<String> {
+        return arrayOf(
+            "-i", videoPath, "-vf", "eq=brightness=0.06:saturation=2", "-c:a", "copy",
+            "${application.cacheDir}/outputs_contras.mp4"
         )
     }
 
